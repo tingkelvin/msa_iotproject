@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "azure-iot-device": "^1.17.0",
+    "azure-iot-device-mqtt": "^1.15.0",
+    "azure-iot-provisioning-device-mqtt": "^1.7.4",
+    "azure-iot-security-symmetric-key": "^1.7.4",
+    "azure-maps-rest": "^2.0.5",
+    "chalk": "^4.1.2"
+  }
+}
