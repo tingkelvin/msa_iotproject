@@ -14,9 +14,9 @@ var ProvisioningDeviceClient =
 var provisioningHost = "global.azure-devices-provisioning.net";
 
 // Enter your Azure IoT keys.
-var idScope = "0ne003A4F95";
-var registrationId = "RefrigeratedTruck1";
-var symmetricKey = "pjwjb6v1XVUbqa9+A1ZXY8AcFBbTYyqEx7xRLShNm6A=";
+var idScope = "0ne003ACEE3";
+var registrationId = "pet1";
+var symmetricKey = "IlUxc5g1L9mhzQwlrD4DYx+nRXBxwkmmVdOwFwnJ9ss==";
 
 var provisioningSecurityClient = new SymmetricKeySecurityClient(
   registrationId,
@@ -30,7 +30,7 @@ var provisioningClient = ProvisioningDeviceClient.create(
 );
 var hubClient;
 
-var truckIdentification = "Truck number 1";
+var petIdentification = "Pet 1";
 
 var rest = require("azure-maps-rest");
 
@@ -52,28 +52,31 @@ function redMessage(text) {
 
 // Truck globals initialized to the starting state of the truck.
 // Enums, frozen name:value pairs.
-var stateEnum = Object.freeze({
-  ready: "ready",
-  enroute: "enroute",
-  delivering: "delivering",
-  returning: "returning",
-  loading: "loading",
-  dumping: "dumping",
+
+var actEnum = Object.freeze({
+  resting: "resting",
+  moving: "moving",
+  eating: "eating",
+  drinking: "drinking",
+  go2toilet: "go2toilet",
+  randomMove: "randomMove",
 });
-var contentsEnum = Object.freeze({
-  full: "full",
-  melting: "melting",
-  empty: "empty",
-});
-var fanEnum = Object.freeze({ on: "on", off: "off", failed: "failed" });
-const deliverTime = 600; // Time to complete delivery, in seconds.
-const loadingTime = 800; // Time to load contents.
-const dumpingTime = 400; // Time to dump melted contents.
-const tooWarmThreshold = 2; // Degrees C temperature that is too warm for contents.
-const tooWarmtooLong = 60; // Time in seconds for contents to start melting if temperatures are above threshold.
-var timeOnCurrentTask = 0; // Time on current task, in seconds.
-var interval = 60; // Time interval in seconds.
-var tooWarmPeriod = 0; // Time that contents are too warm, in seconds.
+
+var action = [
+  "resting",
+  "sleeping",
+  "eating",
+  "drinking",
+  "go2toilet",
+  "randomMove",
+];
+
+const eatingTime = 10; // Time to complete delivery, in seconds.
+const sleepingTime = 10; // Time to load contents.
+const toiletTime = 10; // Time to dump melted contents.
+const drinkingTime = 5;
+var interval = 30; // Time interval in seconds.
+
 var temp = -2; // Current temperature of contents, in degrees C.
 var baseLat = 47.644702; // Base position latitude.
 var baseLon = -122.130137; // Base position longitude.
@@ -81,50 +84,24 @@ var currentLat = baseLat; // Current position latitude.
 var currentLon = baseLon; // Current position longitude.
 var destinationLat; // Destination position latitude.
 var destinationLon; // Destination position longitude.
-var fan = fanEnum.on; // Cooling fan state.
-var contents = contentsEnum.full; // Truck contents state.
-var state = stateEnum.ready; // Truck is full and ready to go!
+
+var location = {
+  eating: [47.6448, -122.13014],
+  drinking: [47.6445, -122.1301],
+  go2toilet: [47.6443, -122.1309],
+};
+var state = actEnum.resting; // Truck is full and ready to go!
+var act;
+
 var optimalTemperature = -5; // Setting - can be changed by the operator from IoT Central.
 var outsideTemperature = 12; // Ambient outside temperature.
 const noEvent = "none";
 var eventText = noEvent; // Text to send to the IoT operator.
-var customer = [
-  // Latitude and longitude position of customers.
-
-  // Gasworks Park
-  [47.645892, -122.336954],
-
-  // Golden Gardens Park
-  [47.688741, -122.402965],
-
-  // Seward Park
-  [47.551093, -122.249266],
-
-  // Lake Sammamish Park
-  [47.555698, -122.065996],
-
-  // Marymoor Park
-  [47.663747, -122.120879],
-
-  // Meadowdale Beach Park
-  [47.857295, -122.316355],
-
-  // Lincoln Park
-  [47.53025, -122.393055],
-
-  // Gene Coulon Park
-  [47.503266, -122.200194],
-
-  // Luther Bank Park
-  [47.591094, -122.226833],
-
-  // Pioneer Park
-  [47.54412, -122.221673],
-];
 var path = []; // Latitude and longitude steps for the route.
 var timeOnPath = []; // Time in seconds for each section of the route.
-var truckOnSection; // The current path section the truck is on.
-var truckSectionsCompletedTime; // The time the truck has spent on previous completed sections.
+var petOnSection; // The current path section the truck is on.
+var petSectionsCompletedTime; // The time the truck has spent on previous completed sections.
+var timeOnCurrentTask = 0; // Time on current task in seconds.
 
 function Degrees2Radians(deg) {
   return (deg * Math.PI) / 180;
@@ -155,36 +132,32 @@ function Arrived() {
 
 function UpdatePosition() {
   while (
-    truckSectionsCompletedTime + timeOnPath[truckOnSection] <
-      timeOnCurrentTask &&
-    truckOnSection < timeOnPath.length - 1
+    petSectionsCompletedTime + timeOnPath[petOnSection] < timeOnCurrentTask &&
+    petOnSection < timeOnPath.length - 1
   ) {
     // Truck has moved on to the next section.
-    truckSectionsCompletedTime += timeOnPath[truckOnSection];
-    ++truckOnSection;
+    petSectionsCompletedTime += timeOnPath[petOnSection];
+    ++petOnSection;
   }
 
   // Ensure remainder is less than or equal to 1, because the interval may take count over what is needed.
   var remainderFraction = Math.min(
     1,
-    (timeOnCurrentTask - truckSectionsCompletedTime) /
-      timeOnPath[truckOnSection]
+    (timeOnCurrentTask - petSectionsCompletedTime) / timeOnPath[petOnSection]
   );
 
   // The path should be one entry longer than the timeOnPath array.
   // Find how far along the section the truck has moved.
   currentLat =
-    path[truckOnSection][0] +
-    remainderFraction * (path[truckOnSection + 1][0] - path[truckOnSection][0]);
+    path[petOnSection][0] +
+    remainderFraction * (path[petOnSection + 1][0] - path[petOnSection][0]);
   currentLon =
-    path[truckOnSection][1] +
-    remainderFraction * (path[truckOnSection + 1][1] - path[truckOnSection][1]);
+    path[petOnSection][1] +
+    remainderFraction * (path[petOnSection + 1][1] - path[petOnSection][1]);
 }
 
 function GetRoute(newState) {
   // Set the state to ready, until the new route arrives.
-  state = stateEnum.ready;
-
   // Coordinates are in longitude first.
   var coordinates = [
     [currentLon, currentLat],
@@ -201,6 +174,10 @@ function GetRoute(newState) {
           JSON.stringify(data.routes[0].legs[0].points.length, null, 4)
       );
 
+      if (data.routes[0].legs[0].points.length <= 2) {
+        state = act;
+        return;
+      }
       // Clear the path.
       path.length = 0;
 
@@ -241,8 +218,8 @@ function GetRoute(newState) {
         timeForOneSection = distanceApartInMeters / pathSpeed;
         timeOnPath.push(timeForOneSection);
       }
-      truckOnSection = 0;
-      truckSectionsCompletedTime = 0;
+      petOnSection = 0;
+      petSectionsCompletedTime = 0;
       timeOnCurrentTask = 0;
 
       // Update the state now that the route has arrived, either enroute or returning.
@@ -256,56 +233,27 @@ function GetRoute(newState) {
   );
 }
 
-function CmdGoToCustomer(request, response) {
+function goTo(act) {
   // Pick up a variable from the request payload.
-  var num = request.payload;
-  console.log(num);
-  // Check for valid customer ID.
-  if (num >= 0 && num < customer.length) {
-    switch (state) {
-      case stateEnum.dumping:
-      case stateEnum.loading:
-      case stateEnum.delivering:
-        eventText = "Unable to act - " + state;
-        break;
-      case stateEnum.ready:
-      case stateEnum.enroute:
-      case stateEnum.returning:
-        if (contents === contentsEnum.empty) {
-          eventText = "Unable to act - empty";
-        } else {
-          console.log(customer[num][0]);
-          // Set new customer event only when all is good.
-          eventText = "New customer: " + num.toString();
-          destinationLat = customer[num][0];
-          destinationLon = customer[num][1];
-
-          // Find route from current position to destination, and store route.
-          GetRoute(stateEnum.enroute);
-        }
-        break;
-    }
-  } else {
-    eventText = "Invalid customer: " + num;
+  console.log("action", act);
+  // Set new customer event only when all is good.
+  eventText = "New Action: " + act;
+  if (act == "resting") {
+    state = actEnum.rest;
+    return;
+  } else if (act == "sleeping") {
+    state == actEnum.sleeping;
+    return;
   }
 
-  // Acknowledge the command.
-  response.send(200, "Success", function (errorMessage) {
-    // Failure
-    if (errorMessage) {
-      redMessage(
-        "Failed sending a CmdGoToCustomer response:\n" + errorMessage.message
-      );
-    }
-  });
-}
+  var loc;
+  loc = location[act];
+  console.log(loc);
+  destinationLat = loc[0];
+  destinationLon = loc[1];
 
-function ReturnToBase() {
-  destinationLat = baseLat;
-  destinationLon = baseLon;
-
-  // Find route from current position to base, and store route.
-  GetRoute(stateEnum.returning);
+  // Find route from current position to destination, and store route.
+  GetRoute(actEnum.moving);
 }
 
 function CmdRecall(request, response) {
@@ -341,133 +289,69 @@ function dieRoll(max) {
   return Math.random() * max;
 }
 
-function UpdateTruck() {
-  if (contents == contentsEnum.empty) {
-    // Turn the cooling system off, if possible, when the contents are empty.
-    if (fan == fanEnum.on) {
-      fan = fanEnum.off;
-    }
-    temp += -2.9 + dieRoll(6);
-  } else {
-    // Contents are full or melting.
-    if (fan != fanEnum.failed) {
-      if (temp < optimalTemperature - 5) {
-        // Turn the cooling system off because contents are getting too cold.
-        fan = fanEnum.off;
-      } else {
-        if (temp > optimalTemperature) {
-          // Temperature is getting higher, so turn cooling system back on.
-          fan = fanEnum.on;
-        }
-      }
-
-      // Randomly fail the cooling system.
-      if (dieRoll(100) < 1) {
-        fan = fanEnum.failed;
-      }
-    }
-
-    // Set the contents temperature. Maintain a cooler temperature if the cooling system is on.
-    if (fan === fanEnum.on) {
-      temp += -3 + dieRoll(5);
-    } else {
-      temp += -2.9 + dieRoll(6);
-    }
-
-    // If the temperature is above a threshold, count the seconds of the duration, and melt the contents if it goes on too long.
-    if (temp >= tooWarmThreshold) {
-      // Contents are warming.
-      tooWarmPeriod += interval;
-      if (tooWarmPeriod >= tooWarmtooLong) {
-        // Contents are melting.
-        contents = contentsEnum.melting;
-      }
-    } else {
-      // Contents are cooling.
-      tooWarmPeriod = Math.max(0, tooWarmPeriod - interval);
-    }
-  }
-
+function UpdatePet() {
   // Limit max temp to outside temperature.
-  temp = Math.min(temp, outsideTemperature);
-
   timeOnCurrentTask += interval;
   switch (state) {
-    case stateEnum.loading:
-      if (timeOnCurrentTask >= loadingTime) {
-        // Finished loading.
-        state = stateEnum.ready;
-        contents = contentsEnum.full;
-        timeOnCurrentTask = 0;
-
-        // Repair or turn on the cooling fan.
-        fan = fanEnum.on;
-        temp = -2;
-      }
-      break;
-    case stateEnum.ready:
-      timeOnCurrentTask = 0;
-      break;
-    case stateEnum.delivering:
-      if (timeOnCurrentTask >= deliverTime) {
-        // Finished delivering.
-        contents = contentsEnum.empty;
-        ReturnToBase();
-      }
-      break;
-    case stateEnum.returning:
-      // Update the truck position.
-      UpdatePosition();
-
-      // Check to see if the truck has arrived back at base.
-      if (Arrived()) {
-        switch (contents) {
-          case contentsEnum.empty:
-            state = stateEnum.loading;
-            break;
-          case contentsEnum.full:
-            state = stateEnum.ready;
-            break;
-          case contentsEnum.melting:
-            state = stateEnum.dumping;
-            break;
-        }
-        timeOnCurrentTask = 0;
-      }
-      break;
-    case stateEnum.enroute:
+    case actEnum.moving:
       // Update truck position.
       UpdatePosition();
 
       // Check to see if the truck has arrived at the customer.
       if (Arrived()) {
-        state = stateEnum.delivering;
+        state = act;
         timeOnCurrentTask = 0;
       }
       break;
-    case stateEnum.dumping:
-      if (timeOnCurrentTask >= dumpingTime) {
+    case actEnum.eating:
+      if (timeOnCurrentTask >= eatingTime) {
         // Finished dumping.
-        state = stateEnum.loading;
-        contents = contentsEnum.empty;
+        state = actEnum.rest;
+        timeOnCurrentTask = 0;
+      }
+      break;
+    case actEnum.go2toilet:
+      if (timeOnCurrentTask >= toiletTime) {
+        // Finished dumping.
+        state = actEnum.rest;
+        timeOnCurrentTask = 0;
+      }
+      break;
+    case actEnum.drinking:
+      if (timeOnCurrentTask >= drinkingTime) {
+        // Finished dumping.
+        state = actEnum.rest;
+        timeOnCurrentTask = 0;
+        break;
+      }
+    case actEnum.sleeping:
+      if (timeOnCurrentTask >= sleepingTime) {
+        // Finished dumping.
+        state = actEnum.rest;
         timeOnCurrentTask = 0;
       }
       break;
   }
 }
 
-function sendTruckTelemetry() {
+function sendPetTelemetry() {
   // Simulate the truck.
-  UpdateTruck();
+  console.log("start of action", state);
+  if (state == actEnum.resting || state == actEnum.sleeping) {
+    act = action[parseInt(dieRoll(5))];
+
+    console.log(act);
+    goTo(act);
+  }
+
+  UpdatePet();
 
   // Create the telemetry data JSON package.
   var data = JSON.stringify({
     // Format:
     // Name from IoT Central app ":" variable name from NodeJS app.
-    ContentsTemperature: temp.toFixed(2),
-    TruckState: state,
-    CoolingSystemState: fan,
-    ContentsState: contents,
+    BodyTemperature: temp.toFixed(2),
+    Action: state,
     Location: {
       // Names must be lon, lat.
       lon: currentLon,
@@ -556,7 +440,7 @@ var connectCallback = (err) => {
     greenMessage("Device successfully connected to Azure IoT Central");
 
     // Send telemetry to Azure IoT Central every 5 seconds.
-    setInterval(sendTruckTelemetry, 5000);
+    setInterval(sendPetTelemetry, 5000);
 
     // Get device twin from Azure IoT Central.
     hubClient.getTwin((err, twin) => {
@@ -567,11 +451,11 @@ var connectCallback = (err) => {
         var properties = {
           // Format:
           // <Property Name in Azure IoT Central> ":" <value in Node.js app>
-          TruckID: truckIdentification,
+          PetID: petIdentification,
         };
         sendDeviceProperties(twin, properties);
         handleWriteablePropertyUpdates(twin);
-        hubClient.onDeviceMethod("GoToCustomer", CmdGoToCustomer);
+
         hubClient.onDeviceMethod("Recall", CmdRecall);
       }
     });
