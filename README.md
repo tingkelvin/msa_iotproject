@@ -69,11 +69,12 @@ The script send the following telemetry data for every 5 seconds:
     },
   }
 ```
+Also at the start of the application, the following properties will be set. Apart from PetID, optimalh2oProperty and boundary are writable. 
 ```
 var properties = {
     PetID: petIdentification, // Unqiue ID for identitifcation
     optimalh2oProperty: optimalWater, //Optimal water drunk
-    boundary:currentBoundary, //Consist 2 points 
+    boundary:currentBoundary, //Consist 2 points (top left and bottom left) of a rectangle
     };
 ```
 
