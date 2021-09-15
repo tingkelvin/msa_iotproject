@@ -19,9 +19,9 @@ var steps = 0;
 var timeIntoilet = 0;
 
 // Enter your Azure IoT keys.
-var idScope = "0ne003ACEE3";
+var idScope = "0ne003B0F58";
 var registrationId = "pet1";
-var symmetricKey = "IlUxc5g1L9mhzQwlrD4DYx+nRXBxwkmmVdOwFwnJ9ss==";
+var symmetricKey = "BxjvYRn4C5lfCTJiE3k87L8bVe7Sh48imuTMg567O2s=";
 
 var provisioningSecurityClient = new SymmetricKeySecurityClient(
   registrationId,
@@ -84,6 +84,7 @@ var interval = 60; // Time interval in seconds.
 
 //-34.91971872841119, 138.60284330427032
 var temp = 38.3; // Current temperature of contents, in degrees C.
+var heartbeat = 140;
 //-34.91952408541246, 138.6048855540916
 var baseLat = -34.91952408541246; // Base position latitude.
 var baseLon = 138.6048855540916; // Base position longitude.
@@ -95,7 +96,7 @@ var boundary = {
   leftpoint: [-34.9173355202698, 138.60162697110525],
   rightpoint: [-34.92093356091991, 138.60748084177416],
 };
-
+var eventText;
 var location = {
   eating: [-34.919150330481145, 138.60270820279462],
   drinking: [-34.92051072187949, 138.6030345161245],
@@ -106,9 +107,8 @@ var act;
 var isPetInBoundary = true;
 var findMyPet = "off";
 var optimalTemperature = 39.2; // Setting - can be changed by the operator from IoT Central.
+var optimalWater = 1000;
 
-const noEvent = "none";
-var eventText = noEvent; // Text to send to the IoT operator.
 var path = []; // Latitude and longitude steps for the route.
 var timeOnPath = []; // Time in seconds for each section of the route.
 var petOnSection; // The current path section the truck is on.
@@ -186,7 +186,7 @@ function GetRoute(newState) {
         "Route found. Number of points = " +
           JSON.stringify(data.routes[0].legs[0].points.length, null, 4)
       );
-      steps = data.routes[0].legs[0].points.length;
+      steps += data.routes[0].legs[0].points.length;
       if (data.routes[0].legs[0].points.length <= 2) {
         state = act;
         return;
@@ -307,24 +307,23 @@ function dieRoll(max) {
 
 function updateBodyTemp() {
   if (state == actEnum.moving) {
+    heartbeat += dieRoll(1);
     temp += dieRoll(1);
   } else if (state == actEnum.resting) {
-    temp -= dieRoll(1);
+    heartbeat -= dieRoll(2);
+    temp -= dieRoll(2);
   } else if (state == actEnum.sleeping) {
-    temp -= dieRoll(1);
+    heartbeat -= dieRoll(2);
+    temp -= dieRoll(2);
   } else if (state == actEnum.eating) {
-    temp -= dieRoll(1);
-  } else if (state == actEnum.eating) {
-    temp -= dieRoll(1);
+    heartbeat -= dieRoll(2);
+    temp -= dieRoll(2);
   } else if (state == actEnum.go2toilet) {
+    heartbeat += dieRoll(1);
     temp -= dieRoll(1);
   }
 }
 function checkPosistion() {
-  //lon = x, lat = y
-  //-34.9173355202698, 138.60162697110525
-
-  //-34.92093356091991, 138.60748084177416
   if (
     currentLat > boundary.leftpoint[0] ||
     currentLat < boundary.rightpoint[0]
@@ -360,7 +359,7 @@ function UpdatePet() {
     case actEnum.eating:
       if (timeOnCurrentTask >= eatingTime) {
         // Finished dumping.
-        foodEaten = eatingTime;
+        foodEaten += eatingTime;
         state = actEnum.rest;
         timeOnCurrentTask = 0;
       }
@@ -368,7 +367,7 @@ function UpdatePet() {
     case actEnum.go2toilet:
       if (timeOnCurrentTask >= toiletTime) {
         // Finished dumping.
-        timeIntoilet = toiletTime;
+        timeIntoilet += toiletTime;
         state = actEnum.rest;
         timeOnCurrentTask = 0;
       }
@@ -376,7 +375,7 @@ function UpdatePet() {
     case actEnum.drinking:
       if (timeOnCurrentTask >= drinkingTime) {
         // Finished dumping.
-        waterDrunk = drinkingTime;
+        waterDrunk += drinkingTime;
         state = actEnum.rest;
         timeOnCurrentTask = 0;
         break;
@@ -384,7 +383,7 @@ function UpdatePet() {
     case actEnum.sleeping:
       if (timeOnCurrentTask >= sleepingTime) {
         // Finished dumping.
-        timeSlept = sleepingTime;
+        timeSlept += sleepingTime;
         state = actEnum.rest;
         timeOnCurrentTask = 0;
       }
@@ -426,8 +425,10 @@ function sendPetTelemetry() {
   var data = JSON.stringify({
     // Format:
     // Name from IoT Central app ":" variable name from NodeJS app.
-    BodyTemperature: temp.toFixed(2),
     Action: state,
+    BodyTemperature: parseInt(temp),
+    HeartBeat: heartbeat,
+    optimalh2o: optimalWater,
     stepWalked: steps,
     timeSpentInToilet: timeIntoilet,
     waterHasDrunk: waterDrunk,
@@ -453,11 +454,7 @@ function sendPetTelemetry() {
   // Create the message by using the preceding defined data.
   var message = new Message(data);
   console.log("Message: " + data);
-  steps = 0;
-  foodEaten = 0;
-  waterDrunk = 0;
-  timeSlept = 0;
-  timeIntoilet = 0;
+
   // Send the message.
   hubClient.sendEvent(message, function (errorMessage) {
     // Error
@@ -484,9 +481,9 @@ function sendDeviceProperties(twin, properties) {
 // Add any writeable properties your device supports. Map them to a function that's called when the writeable property
 // is updated in the IoT Central application.
 var writeableProperties = {
-  OptimalTemperature: (newValue, callback) => {
+  optimalWater: (newValue, callback) => {
     setTimeout(() => {
-      optimalTemperature = newValue;
+      optimalWater = newValue;
       callback(newValue, "completed", 200);
     }, 1000);
   },
@@ -539,10 +536,10 @@ var connectCallback = (err) => {
           // Format:
           // <Property Name in Azure IoT Central> ":" <value in Node.js app>
           PetID: petIdentification,
+          optimalh2oProperty: optimalWater,
         };
         sendDeviceProperties(twin, properties);
         handleWriteablePropertyUpdates(twin);
-
         hubClient.onDeviceMethod("callMyPet", callMyPet);
       }
     });
