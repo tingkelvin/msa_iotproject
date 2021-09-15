@@ -27,18 +27,23 @@ This Iot solution will allow you to
 ![N|Solid](screenshot/Architecture.png)
 
 Deivces
+
 It is a electronic device that wearable on your pet that monitor his health and behaviors
 
-IoT
+IoT Central Application
+
 Device will send telemetry data to the IoT Central which is a fully managed SaaS (software-as-a-service). This IoT Central abstract the technical choices and lets us focus on our solution exclusively.
 
 Event Hub
+
 IoT Hub Device Provisioning Service (DPS) is recommended for registering and connecting large sets of devices. DPS lets you assign and register devices to specific Azure IoT Hub endpoints at scale.
 
 Azure Stream Analytics
+
 Azure Stream Analytics is used for stream processing and rules evaluation. It is used to analysis hot path data. Hot path data must be analysed in real time and with low latency. Sudden drop of body temperature will cause serve damage to your pet. Hence we would like to stream the data with latency and closely monitor your pet.
 
 Power BI Dashboard
+
 Provide visualization of data such as in gauge, bar chart ...etc
 
 ## Stimulation
