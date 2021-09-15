@@ -77,25 +77,25 @@ The duration of the action is random. The body temperature and heart beat will i
 
 ## IoT Central Application
 The overview of the application. The application will check if the pet is stay in the boundary.
-![N|Solid](https://dm2305files.storage.live.com/y4m2rKa_lAEVPonue_xGOV51w257J6OSyODp-ZSWmauMkXygd1ZljnblzuzDcAEgdtseC7kF0YIUC7EIxSLnidpr2fD0ndieQTyI9wLM5xRA0N2QSiG788B_7Vibn60fkv4Ekb-aVgqXUTIyNeK0uTOSVkerNtZpZ6kXES003ssVWTjglEE1jPlPL-OrdhtM9Ye?width=2126&height=1216&cropmode=none)
+![N|Solid](screenshot/Architecture.png)
 
 Rules that define to monitor health. eg. if heartbeat drop below certain value.
-![N|Solid](https://i.ibb.co/25gNjgx/Screen-Shot-2021-09-15-at-8-51-56-pm.png)
+![N|Solid]((screenshotIoT_Central.png)
 
 Commands:
 Find my pet is command that help you to find the pet. If it is triggered, we expect the device to make some noise.
-![N|Solid](https://i.ibb.co/94Sjv2V/Screen-Shot-2021-09-15-at-8-58-06-pm.png)
+![N|Solid](screenshot/findMyPet_command.png)
 
 This command is for setting the optimal amount of water drunk for the pet. 
-![N|Solid](https://i.ibb.co/MCD36cG/Screen-Shot-2021-09-15-at-8-59-29-pm.png)
+![N|Solid](screenshot/setH2o_command.png)
 
 ## Event Hub
 The setting for event hub.
-![N|Solid](https://i.ibb.co/hHKcj8d/Screen-Shot-2021-09-15-at-9-11-10-pm.png)
+![N|Solid](screenshot/EventHub.png)
 
 ## Azure Stream Analytics
 The setting for Azure Stream Analytics.
-![N|Solid](https://i.ibb.co/1X2mfyG/Screen-Shot-2021-09-15-at-9-13-21-pm.png)
+![N|Solid](Stream_Analytics.png)
 
 ## Power BI Dashboard
-![N|Solid](https://dm2305files.storage.live.com/y4mbTxVbeM-PN027Q06m7N-EDLkXTE9eaaRSoMY5U5ajw7WNXVPdGEc_QnyND8NWrRwzaF3-YfQT-RXqZ78fVw-wIS9DcIxftbIqdrlSkdmC8l81BqOO_rv71ksI5gHgPr4LuVjeh9dEc31Iu678Ke0wRSLT6r-Ws3tnrAeP9xtC9o_ut7Nv4GdiFU3NgC50LJp?width=2860&height=1564&cropmode=none)
+![N|Solid](screenshot/PowerBI.gif)
