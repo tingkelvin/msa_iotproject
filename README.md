@@ -131,4 +131,5 @@ This is the query for selecting which data to sent. In this case, we select all 
 A continue set is found in Power BI
 ![N|Solid](screenshot/continuousData.png)
 ## Power BI Dashboard
+
 ![N|Solid](screenshot/PowerBI.gif)
