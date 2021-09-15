@@ -24,7 +24,7 @@ This Iot solution will allow you to
 - Monitor to your pet if he moved out of boundary, in this case is the University of Adelaide
 
 ## Architecture
-![N|Solid](https://i.ibb.co/Nm8nJ3m/Screen-Shot-2021-09-15-at-7-28-18-pm.png)
+![N|Solid](https://dm2305files.storage.live.com/y4mdSTnYN3v9WST-tdy4P3z0pM7A1ek_HDo4dlar_mrBPqcSuYVrcon_UD0ArE9MuYfyBao3Znalbj1YS9liCee1EHKa0Ty5R7E_KFi4MacJ5LGsHygVp29rIur-u16Fv3FdZSYjgPzAaCR2-p4B3QdTKI9l1-GsjpGbQJ8bvlm9cJxyzYvDtPMqoBFKAlOm3zs?width=660&height=140&cropmode=none)
 
 Deivces
 It is a electronic device that wearable on your pet that monitor his health and behaviors
