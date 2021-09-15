@@ -98,4 +98,4 @@ The setting for Azure Stream Analytics.
 ![N|Solid](https://i.ibb.co/1X2mfyG/Screen-Shot-2021-09-15-at-9-13-21-pm.png)
 
 ## Power BI Dashboard
-![N|Solid](https://im4.ezgif.com/tmp/ezgif-4-89008a5b2b7d.gif)
+![N|Solid](https://dm2305files.storage.live.com/y4mbTxVbeM-PN027Q06m7N-EDLkXTE9eaaRSoMY5U5ajw7WNXVPdGEc_QnyND8NWrRwzaF3-YfQT-RXqZ78fVw-wIS9DcIxftbIqdrlSkdmC8l81BqOO_rv71ksI5gHgPr4LuVjeh9dEc31Iu678Ke0wRSLT6r-Ws3tnrAeP9xtC9o_ut7Nv4GdiFU3NgC50LJp?width=2860&height=1564&cropmode=none)
