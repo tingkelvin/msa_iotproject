@@ -132,4 +132,4 @@ A continue set is found in Power BI
 ![N|Solid](screenshot/continuousData.png)
 ## Power BI Dashboard
 
-![N|Solid](screenshot/PowerBI.gif)
+![N|Solid](screenshot/powerBIdashboard.gif)
