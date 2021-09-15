@@ -87,7 +87,7 @@ The overview of the application. The application will check if the pet is stay i
 ![N|Solid](screenshot/Architecture.png)
 
 Rules that define to monitor health. eg. if heartbeat drop below certain value.
-![N|Solid]((screenshotIoT_Central.png)
+![N|Solid]((screenshot/Heartbeat_rule.png)
 
 Commands:
 Find my pet is command that help you to find the pet. If it is triggered, we expect the device to make some noise.
