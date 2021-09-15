@@ -77,7 +77,7 @@ The duration of the action is random. The body temperature and heart beat will i
 
 ## IoT Central Application
 The overview of the application. The application will check if the pet is stay in the boundary.
-![N|Solid](https://i.ibb.co/hKPdZ88/Screen-Shot-2021-09-15-at-8-48-19-pm.png)
+![N|Solid](https://dm2305files.storage.live.com/y4m2rKa_lAEVPonue_xGOV51w257J6OSyODp-ZSWmauMkXygd1ZljnblzuzDcAEgdtseC7kF0YIUC7EIxSLnidpr2fD0ndieQTyI9wLM5xRA0N2QSiG788B_7Vibn60fkv4Ekb-aVgqXUTIyNeK0uTOSVkerNtZpZ6kXES003ssVWTjglEE1jPlPL-OrdhtM9Ye?width=2126&height=1216&cropmode=none)
 
 Rules that define to monitor health. eg. if heartbeat drop below certain value.
 ![N|Solid](https://i.ibb.co/25gNjgx/Screen-Shot-2021-09-15-at-8-51-56-pm.png)
