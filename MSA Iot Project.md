@@ -1,195 +1,102 @@
 # MSA Iot Project
 ## _Pet Health Monitor_
 
-<img src="https://i.ibb.co/9mx9t8r/662fdf7b-88f3-4891-aee1-2bb525a40fb4.jpg|height="50%"" width="48">
+[![N|Solid](https://cldup.com/dTxpPi9lDf.thumb.png)](https://nodesource.com/products/nsolid)
 
-This is Donut. He lives in University of Adelaide. Despite his cuteness he always sneak around in the campus. University of Adelaide is a big university. Sometime his owner has trouble finding him.
+![N|Solid](https://i.ibb.co/9mx9t8r/662fdf7b-88f3-4891-aee1-2bb525a40fb4.jpg | width=100)
 
-His owner has reached us to ask for a solution to deal with this. After going though the Azure Student Acceleration Bootcamp. Here we have a solution for that.
+This is Donut. He lives in University of Adelaide. Despite his cuteness he always sneaks around in the campus. University of Adelaide is a big university. Sometime his owner has trouble of finding him.
+
+His owner has reached us to ask for a solution to deal with this. After going through the Azure Student Acceleration Bootcamp. Here we have a solution for that.
 
 Iot Central application + Event Hut + Power BI = Pet Health Monitor
 
 This Iot solution will allow you to
 
-- Track your pet poisition
+- Track your pet position
 - Monitor your pet's health 
 
 ## Features
 
 - Monitor heartbeat and body temperature.
 - Set up optimal heartbeat and body temperature, the system will warn you if these metrics drop below optimal value.
-- Track your pet activity level such sleeping time, how many steps has walked and time spent in toilet.
+- Track your pet activity level such sleeping time, how many steps has walked, and time spent in toilet.
 - Track your pet diet habit, how many water and food has drunk and eaten.
 - Constantly monitor your pet's geographic location.
 - Monitor to your pet if he moved out of boundary, in this case is the University of Adelaide
 
-Markdown is a lightweight markup language based on the formatting conventions
-that people naturally use in email.
-As [John Gruber] writes on the [Markdown site][df1]
+## Architecture
+![N|Solid](https://i.ibb.co/Nm8nJ3m/Screen-Shot-2021-09-15-at-7-28-18-pm.png)
 
-> The overriding design goal for Markdown's
-> formatting syntax is to make it as readable
-> as possible. The idea is that a
-> Markdown-formatted document should be
-> publishable as-is, as plain text, without
-> looking like it's been marked up with tags
-> or formatting instructions.
+Deivces
+It is a electronic device that wearable on your pet that monitor his health and behaviors
 
-This text you see here is *actually- written in Markdown! To get a feel
-for Markdown's syntax, type some text into the left window and
-watch the results in the right.
+IoT
+Device will send telemetry data to the IoT Central which is a fully managed SaaS (software-as-a-service). This IoT Central abstract the technical choices and lets us focus on our solution exclusively.
 
-## Tech
+Event Hub
+IoT Hub Device Provisioning Service (DPS) is recommended for registering and connecting large sets of devices. DPS lets you assign and register devices to specific Azure IoT Hub endpoints at scale.
 
-Dillinger uses a number of open source projects to work properly:
+Azure Stream Analytics
+Azure Stream Analytics is used for stream processing and rules evaluation. It is used to analysis hot path data. Hot path data must be analysed in real time and with low latency. Sudden drop of body temperature will cause serve damage to your pet. Hence we would like to stream the data with latency and closely monitor your pet.
 
-- [AngularJS] - HTML enhanced for web apps!
-- [Ace Editor] - awesome web-based text editor
-- [markdown-it] - Markdown parser done right. Fast and easy to extend.
-- [Twitter Bootstrap] - great UI boilerplate for modern web apps
-- [node.js] - evented I/O for the backend
-- [Express] - fast node.js network app framework [@tjholowaychuk]
-- [Gulp] - the streaming build system
-- [Breakdance](https://breakdance.github.io/breakdance/) - HTML
-to Markdown converter
-- [jQuery] - duh
+Power BI Dashboard
+Provide visualization of data such as in gauge, bar chart ...etc
 
-And of course Dillinger itself is open source with a [public repository][dill]
- on GitHub.
+## Stimulation
+To better test our prototypes, we have create a script to stimulate pet behaviours. The script is located ./PetHealthMonitor/app.js
 
-## Installation
-
-Dillinger requires [Node.js](https://nodejs.org/) v10+ to run.
-
-Install the dependencies and devDependencies and start the server.
-
-```sh
-cd dillinger
-npm i
-node app
+The script send the following telemetry data for every 5 seconds:
+```
+{
+    Action: state,
+    BodyTemperature: parseInt(temp),
+    HeartBeat: heartbeat,
+    optimalh2o: optimalWater,
+    stepWalked: steps,
+    timeSpentInToilet: timeIntoilet,
+    waterHasDrunk: waterDrunk,
+    foodHasEaten: foodEaten,
+    timesHasSlept: timeSlept,
+    PetInBoundary: isPetInBoundary,
+    isCallMyPet: findMyPet,
+    Location: {
+      lon: currentLon,
+      lat: currentLat,
+    },
+  }
 ```
 
-For production environments...
+In each literation, the action will either move randomly, eat, drink, go to toilet, sleep and rest.
 
-```sh
-npm install --production
-NODE_ENV=production node app
-```
+If the action is "move randomly", the pet will move to a random place.
 
-## Plugins
+If the action is "eat", "drink" and "go to toilet", the pet will move to a food source, water source and toilet respectively.
 
-Dillinger is currently extended with the following plugins.
-Instructions on how to use them in your own application are linked below.
+If the action is "sleep" and "rest", the pet will stay at the same place.
 
-| Plugin | README |
-| ------ | ------ |
-| Dropbox | [plugins/dropbox/README.md][PlDb] |
-| GitHub | [plugins/github/README.md][PlGh] |
-| Google Drive | [plugins/googledrive/README.md][PlGd] |
-| OneDrive | [plugins/onedrive/README.md][PlOd] |
-| Medium | [plugins/medium/README.md][PlMe] |
-| Google Analytics | [plugins/googleanalytics/README.md][PlGa] |
+The duration of the action is random. The body temperature and heart beat will increase or decrease respect to the action. To calculate the amount of food and water consumed, we measure the duration of the action. For example, if the pet stays at the water source for 5 seconds, we expect that the pet drinks 0.5 ml water.
 
-## Development
+## IoT Central Application
+The overview of the application. The application will check if the pet is stay in the boundary.
+![N|Solid](https://i.ibb.co/hKPdZ88/Screen-Shot-2021-09-15-at-8-48-19-pm.png)
 
-Want to contribute? Great!
+Rules that define to monitor health. eg. if heartbeat drop below certain value.
+![N|Solid](https://i.ibb.co/25gNjgx/Screen-Shot-2021-09-15-at-8-51-56-pm.png)
 
-Dillinger uses Gulp + Webpack for fast developing.
-Make a change in your file and instantaneously see your updates!
+Commands:
+Find my pet is command that help you to find the pet. If it is triggered, we expect the device to make some noise.
+![N|Solid](https://i.ibb.co/94Sjv2V/Screen-Shot-2021-09-15-at-8-58-06-pm.png)
 
-Open your favorite Terminal and run these commands.
+This command is for setting the optimal amount of water drunk for the pet. 
+![N|Solid](https://i.ibb.co/MCD36cG/Screen-Shot-2021-09-15-at-8-59-29-pm.png)
 
-First Tab:
+## Event Hub
+The setting for event hub.
+![N|Solid](https://i.ibb.co/hHKcj8d/Screen-Shot-2021-09-15-at-9-11-10-pm.png)
 
-```sh
-node app
-```
+## Azure Stream Analytics
+The setting for Azure Stream Analytics.
+![N|Solid](https://i.ibb.co/1X2mfyG/Screen-Shot-2021-09-15-at-9-13-21-pm.png)
 
-Second Tab:
-
-```sh
-gulp watch
-```
-
-(optional) Third:
-
-```sh
-karma test
-```
-
-#### Building for source
-
-For production release:
-
-```sh
-gulp build --prod
-```
-
-Generating pre-built zip archives for distribution:
-
-```sh
-gulp build dist --prod
-```
-
-## Docker
-
-Dillinger is very easy to install and deploy in a Docker container.
-
-By default, the Docker will expose port 8080, so change this within the
-Dockerfile if necessary. When ready, simply use the Dockerfile to
-build the image.
-
-```sh
-cd dillinger
-docker build -t <youruser>/dillinger:${package.json.version} .
-```
-
-This will create the dillinger image and pull in the necessary dependencies.
-Be sure to swap out `${package.json.version}` with the actual
-version of Dillinger.
-
-Once done, run the Docker image and map the port to whatever you wish on
-your host. In this example, we simply map port 8000 of the host to
-port 8080 of the Docker (or whatever port was exposed in the Dockerfile):
-
-```sh
-docker run -d -p 8000:8080 --restart=always --cap-add=SYS_ADMIN --name=dillinger <youruser>/dillinger:${package.json.version}
-```
-
-> Note: `--capt-add=SYS-ADMIN` is required for PDF rendering.
-
-Verify the deployment by navigating to your server address in
-your preferred browser.
-
-```sh
-127.0.0.1:8000
-```
-
-## License
-
-MIT
-
-**Free Software, Hell Yeah!**
-
-[//]: # (These are reference links used in the body of this note and get stripped out when the markdown processor does its job. There is no need to format nicely because it shouldn't be seen. Thanks SO - http://stackoverflow.com/questions/4823468/store-comments-in-markdown-syntax)
-
-   [dill]: <https://github.com/joemccann/dillinger>
-   [git-repo-url]: <https://github.com/joemccann/dillinger.git>
-   [john gruber]: <http://daringfireball.net>
-   [df1]: <http://daringfireball.net/projects/markdown/>
-   [markdown-it]: <https://github.com/markdown-it/markdown-it>
-   [Ace Editor]: <http://ace.ajax.org>
-   [node.js]: <http://nodejs.org>
-   [Twitter Bootstrap]: <http://twitter.github.com/bootstrap/>
-   [jQuery]: <http://jquery.com>
-   [@tjholowaychuk]: <http://twitter.com/tjholowaychuk>
-   [express]: <http://expressjs.com>
-   [AngularJS]: <http://angularjs.org>
-   [Gulp]: <http://gulpjs.com>
-
-   [PlDb]: <https://github.com/joemccann/dillinger/tree/master/plugins/dropbox/README.md>
-   [PlGh]: <https://github.com/joemccann/dillinger/tree/master/plugins/github/README.md>
-   [PlGd]: <https://github.com/joemccann/dillinger/tree/master/plugins/googledrive/README.md>
-   [PlOd]: <https://github.com/joemccann/dillinger/tree/master/plugins/onedrive/README.md>
-   [PlMe]: <https://github.com/joemccann/dillinger/tree/master/plugins/medium/README.md>
-   [PlGa]: <https://github.com/RahulHP/dillinger/blob/master/plugins/googleanalytics/README.md>
+## Power BI Dashboard
