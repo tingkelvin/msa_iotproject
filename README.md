@@ -86,14 +86,24 @@ If the action is "eat", "drink" and "go to toilet", the pet will move to a food 
 
 If the action is "sleep" and "rest", the pet will stay at the same place.
 
-The duration of the action is random. The body temperature and heart beat will increase or decrease respect to the action. To calculate the amount of food and water consumed, we measure the duration of the action. For example, if the pet stays at the water source for 5 seconds, we expect that the pet drinks 0.5 ml water.
+The duration of the action is random. The body temperature and heart beat will increase or decrease respect to the action. To calculate the amount of food and 
+water consumed, we measure the duration of the action. For example, if the pet stays at the water source for 5 seconds, we expect that the pet drinks 0.5 ml water.
+
+The stimulated data will send to the IoT Central Applcation by using Auzre IoT keys
+
+```
+var idScope = "0ne003B0F58";
+var registrationId = "pet1";
+var symmetricKey = "BxjvYRn4C5lfCTJiE3k87L8bVe7Sh48imuTMg567O2s=";
+```
 
 ## IoT Central Application
+
 The overview of the application. The application will check if the pet is stay in the boundary.
 ![N|Solid](screenshot/IoT_Central.png)
 
 Rules that define to monitor health. eg. if heartbeat drop below certain value.
-![N|Solid]((screenshot/Heartbeat_rule.png)
+![N|Solid](screenshot/Heartbeat_rule.png)
 
 Commands:
 Find my pet is command that help you to find the pet. If it is triggered, we expect the device to make some noise.
@@ -102,13 +112,21 @@ Find my pet is command that help you to find the pet. If it is triggered, we exp
 This command is for setting the optimal amount of water drunk for the pet. 
 ![N|Solid](screenshot/setH2o_command.png)
 
+After setting up an event hub, we would use RootManageSharedAccessKey to send the data to event hub.
+![N|Solid](screenshot/data2eventhub.png)
+
 ## Event Hub
 The setting for event hub.
 ![N|Solid](screenshot/EventHub.png)
 
 ## Azure Stream Analytics
-The setting for Azure Stream Analytics.
+This is input stream from event hub.
+![N|Solid](screenshot/inputstream.png)
+This is output stream. Select all data and send it to PowerBI
 ![N|Solid](screenshot/Stream_Analytics.png)
 
+## Power BI
+A continue set is found in Power BI
+![N|Solid](screenshot/continuousData.png)
 ## Power BI Dashboard
 ![N|Solid](screenshot/PowerBI.gif)
