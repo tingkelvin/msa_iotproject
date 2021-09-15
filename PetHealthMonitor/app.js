@@ -97,6 +97,7 @@ var boundary = {
   rightpoint: [-34.92093356091991, 138.60748084177416],
 };
 var eventText;
+var test;
 var location = {
   eating: [-34.919150330481145, 138.60270820279462],
   drinking: [-34.92051072187949, 138.6030345161245],
