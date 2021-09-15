@@ -12,6 +12,11 @@ var SymmetricKeySecurityClient =
 var ProvisioningDeviceClient =
   require("azure-iot-provisioning-device").ProvisioningDeviceClient;
 var provisioningHost = "global.azure-devices-provisioning.net";
+var waterDrunk = 0;
+var foodEaten = 0;
+var timeSlept = 0;
+var steps = 0;
+var timeIntoilet = 0;
 
 // Enter your Azure IoT keys.
 var idScope = "0ne003ACEE3";
@@ -71,30 +76,37 @@ var action = [
   "randomMove",
 ];
 
-const eatingTime = 10; // Time to complete delivery, in seconds.
-const sleepingTime = 10; // Time to load contents.
-const toiletTime = 10; // Time to dump melted contents.
-const drinkingTime = 5;
-var interval = 30; // Time interval in seconds.
+var eatingTime = 10; // Time to complete delivery, in seconds.
+var sleepingTime = 10; // Time to load contents.
+var toiletTime = 10; // Time to dump melted contents.
+var drinkingTime = 5;
+var interval = 60; // Time interval in seconds.
 
-var temp = -2; // Current temperature of contents, in degrees C.
-var baseLat = 47.644702; // Base position latitude.
-var baseLon = -122.130137; // Base position longitude.
+//-34.91971872841119, 138.60284330427032
+var temp = 38.3; // Current temperature of contents, in degrees C.
+//-34.91952408541246, 138.6048855540916
+var baseLat = -34.91952408541246; // Base position latitude.
+var baseLon = 138.6048855540916; // Base position longitude.
 var currentLat = baseLat; // Current position latitude.
 var currentLon = baseLon; // Current position longitude.
 var destinationLat; // Destination position latitude.
 var destinationLon; // Destination position longitude.
+var boundary = {
+  leftpoint: [-34.9173355202698, 138.60162697110525],
+  rightpoint: [-34.92093356091991, 138.60748084177416],
+};
 
 var location = {
-  eating: [47.6448, -122.13014],
-  drinking: [47.6445, -122.1301],
-  go2toilet: [47.6443, -122.1309],
+  eating: [-34.919150330481145, 138.60270820279462],
+  drinking: [-34.92051072187949, 138.6030345161245],
+  go2toilet: [-34.91977222673858, 138.6044869856843],
 };
 var state = actEnum.resting; // Truck is full and ready to go!
 var act;
+var isPetInBoundary = true;
+var findMyPet = "off";
+var optimalTemperature = 39.2; // Setting - can be changed by the operator from IoT Central.
 
-var optimalTemperature = -5; // Setting - can be changed by the operator from IoT Central.
-var outsideTemperature = 12; // Ambient outside temperature.
 const noEvent = "none";
 var eventText = noEvent; // Text to send to the IoT operator.
 var path = []; // Latitude and longitude steps for the route.
@@ -165,7 +177,8 @@ function GetRoute(newState) {
   ];
   var results = routeURL.calculateRouteDirections(
     rest.Aborter.timeout(10000),
-    coordinates
+    coordinates,
+    { travelMode: "pedestrian" }
   );
   results.then(
     (data) => {
@@ -173,7 +186,7 @@ function GetRoute(newState) {
         "Route found. Number of points = " +
           JSON.stringify(data.routes[0].legs[0].points.length, null, 4)
       );
-
+      steps = data.routes[0].legs[0].points.length;
       if (data.routes[0].legs[0].points.length <= 2) {
         state = act;
         return;
@@ -244,6 +257,22 @@ function goTo(act) {
   } else if (act == "sleeping") {
     state == actEnum.sleeping;
     return;
+  } else if (act == "randomMove") {
+    // console.log("hi");
+    var randomNum1 = dieRoll(10);
+    var randomNum2 = dieRoll(10);
+    if (randomNum1 > 5) {
+      destinationLat = currentLat + dieRoll(0.001);
+    } else {
+      destinationLat = currentLat - dieRoll(0.001);
+    }
+    if (randomNum2 > 5) {
+      destinationLon = currentLon + dieRoll(0.001);
+    } else {
+      destinationLon = currentLon - dieRoll(0.001);
+    }
+    GetRoute(actEnum.moving);
+    return;
   }
 
   var loc;
@@ -256,30 +285,17 @@ function goTo(act) {
   GetRoute(actEnum.moving);
 }
 
-function CmdRecall(request, response) {
-  switch (state) {
-    case stateEnum.ready:
-    case stateEnum.loading:
-    case stateEnum.dumping:
-      eventText = "Already at base";
-      break;
-    case stateEnum.returning:
-      eventText = "Already returning";
-      break;
-    case stateEnum.delivering:
-      eventText = "Unable to recall - " + state;
-      break;
-    case stateEnum.enroute:
-      ReturnToBase();
-      break;
+function callMyPet(request, response) {
+  if (findMyPet == "off") {
+    findMyPet = "on";
+  } else {
+    findMyPet = "off";
   }
-
-  // Acknowledge the command.
   response.send(200, "Success", function (errorMessage) {
     // Failure
     if (errorMessage) {
       redMessage(
-        "Failed sending a CmdRecall response:\n" + errorMessage.message
+        "Failed sending a CmdGoToCustomer response:\n" + errorMessage.message
       );
     }
   });
@@ -289,23 +305,62 @@ function dieRoll(max) {
   return Math.random() * max;
 }
 
+function updateBodyTemp() {
+  if (state == actEnum.moving) {
+    temp += dieRoll(1);
+  } else if (state == actEnum.resting) {
+    temp -= dieRoll(1);
+  } else if (state == actEnum.sleeping) {
+    temp -= dieRoll(1);
+  } else if (state == actEnum.eating) {
+    temp -= dieRoll(1);
+  } else if (state == actEnum.eating) {
+    temp -= dieRoll(1);
+  } else if (state == actEnum.go2toilet) {
+    temp -= dieRoll(1);
+  }
+}
+function checkPosistion() {
+  //lon = x, lat = y
+  //-34.9173355202698, 138.60162697110525
+
+  //-34.92093356091991, 138.60748084177416
+  if (
+    currentLat > boundary.leftpoint[0] ||
+    currentLat < boundary.rightpoint[0]
+  ) {
+    isPetInBoundary = false;
+    return;
+  }
+  if (
+    currentLon < boundary.leftpoint[1] ||
+    currentLon > boundary.rightpoint[1]
+  ) {
+    isPetInBoundary = false;
+    return;
+  }
+  isPetInBoundary = true;
+}
 function UpdatePet() {
   // Limit max temp to outside temperature.
   timeOnCurrentTask += interval;
+  updateBodyTemp();
   switch (state) {
     case actEnum.moving:
       // Update truck position.
       UpdatePosition();
-
+      checkPosistion();
       // Check to see if the truck has arrived at the customer.
       if (Arrived()) {
         state = act;
         timeOnCurrentTask = 0;
       }
       break;
+
     case actEnum.eating:
       if (timeOnCurrentTask >= eatingTime) {
         // Finished dumping.
+        foodEaten = eatingTime;
         state = actEnum.rest;
         timeOnCurrentTask = 0;
       }
@@ -313,6 +368,7 @@ function UpdatePet() {
     case actEnum.go2toilet:
       if (timeOnCurrentTask >= toiletTime) {
         // Finished dumping.
+        timeIntoilet = toiletTime;
         state = actEnum.rest;
         timeOnCurrentTask = 0;
       }
@@ -320,6 +376,7 @@ function UpdatePet() {
     case actEnum.drinking:
       if (timeOnCurrentTask >= drinkingTime) {
         // Finished dumping.
+        waterDrunk = drinkingTime;
         state = actEnum.rest;
         timeOnCurrentTask = 0;
         break;
@@ -327,6 +384,7 @@ function UpdatePet() {
     case actEnum.sleeping:
       if (timeOnCurrentTask >= sleepingTime) {
         // Finished dumping.
+        timeSlept = sleepingTime;
         state = actEnum.rest;
         timeOnCurrentTask = 0;
       }
@@ -337,10 +395,28 @@ function UpdatePet() {
 function sendPetTelemetry() {
   // Simulate the truck.
   console.log("start of action", state);
-  if (state == actEnum.resting || state == actEnum.sleeping) {
-    act = action[parseInt(dieRoll(5))];
+  if (
+    state == actEnum.resting ||
+    state == actEnum.sleeping ||
+    state == "randomMove"
+  ) {
+    var num = Math.floor(Math.random() * 6);
+    act = action[num];
 
-    console.log(act);
+    if (act == "eating") {
+      eatingTime = Math.floor(Math.random() * 11);
+    }
+    if (act == "sleeping") {
+      sleepingTime = Math.floor(Math.random() * 11);
+    }
+    if (act == "go2toilet") {
+      toiletTime = Math.floor(Math.random() * 11);
+    }
+    if (act == "drinking") {
+      drinkingTime = Math.floor(Math.random() * 5);
+    }
+
+    console.log(num);
     goTo(act);
   }
 
@@ -352,6 +428,13 @@ function sendPetTelemetry() {
     // Name from IoT Central app ":" variable name from NodeJS app.
     BodyTemperature: temp.toFixed(2),
     Action: state,
+    stepWalked: steps,
+    timeSpentInToilet: timeIntoilet,
+    waterHasDrunk: waterDrunk,
+    foodHasEaten: foodEaten,
+    timesHasSlept: timeSlept,
+    PetInBoundary: isPetInBoundary,
+    isCallMyPet: findMyPet,
     Location: {
       // Names must be lon, lat.
       lon: currentLon,
@@ -360,17 +443,21 @@ function sendPetTelemetry() {
   });
 
   // Add the eventText event string, if there is one.
-  if (eventText != noEvent) {
-    data += JSON.stringify({
-      Event: eventText,
-    });
-    eventText = noEvent;
-  }
+  // if (eventText != noEvent) {
+  //   data += JSON.stringify({
+  //     Event: eventText,
+  //   });
+  //   eventText = noEvent;
+  // }
 
   // Create the message by using the preceding defined data.
   var message = new Message(data);
   console.log("Message: " + data);
-
+  steps = 0;
+  foodEaten = 0;
+  waterDrunk = 0;
+  timeSlept = 0;
+  timeIntoilet = 0;
   // Send the message.
   hubClient.sendEvent(message, function (errorMessage) {
     // Error
@@ -456,7 +543,7 @@ var connectCallback = (err) => {
         sendDeviceProperties(twin, properties);
         handleWriteablePropertyUpdates(twin);
 
-        hubClient.onDeviceMethod("Recall", CmdRecall);
+        hubClient.onDeviceMethod("callMyPet", callMyPet);
       }
     });
   }
