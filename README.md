@@ -123,6 +123,8 @@ The setting for event hub.
 This is input stream from event hub.
 ![N|Solid](screenshot/inputstream.png)
 This is output stream. Select all data and send it to PowerBI
+![N|Solid](screenshot/outputstream.png)
+This is the query for selecting which data to sent. In this case, we select all data.
 ![N|Solid](screenshot/Stream_Analytics.png)
 
 ## Power BI
