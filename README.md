@@ -24,7 +24,7 @@ This Iot solution will allow you to
 - Monitor to your pet if he moved out of boundary, in this case is the University of Adelaide
 
 ## Architecture
-![N|Solid](https://dm2305files.storage.live.com/y4mdSTnYN3v9WST-tdy4P3z0pM7A1ek_HDo4dlar_mrBPqcSuYVrcon_UD0ArE9MuYfyBao3Znalbj1YS9liCee1EHKa0Ty5R7E_KFi4MacJ5LGsHygVp29rIur-u16Fv3FdZSYjgPzAaCR2-p4B3QdTKI9l1-GsjpGbQJ8bvlm9cJxyzYvDtPMqoBFKAlOm3zs?width=1666&height=354&cropmode=none)
+![N|Solid](screenshot/Architecture.png)
 
 Deivces
 It is a electronic device that wearable on your pet that monitor his health and behaviors
@@ -47,22 +47,29 @@ To better test our prototypes, we have create a script to stimulate pet behaviou
 The script send the following telemetry data for every 5 seconds:
 ```
 {
-    Action: state,
-    BodyTemperature: parseInt(temp),
-    HeartBeat: heartbeat,
-    optimalh2o: optimalWater,
-    stepWalked: steps,
-    timeSpentInToilet: timeIntoilet,
-    waterHasDrunk: waterDrunk,
-    foodHasEaten: foodEaten,
-    timesHasSlept: timeSlept,
-    PetInBoundary: isPetInBoundary,
-    isCallMyPet: findMyPet,
-    Location: {
+    Action: state, //Curent action
+    BodyTemperature: parseInt(temp), // Body Temperature
+    HeartBeat: heartbeat, //Heat Beat
+    optimalh2o: optimalWater, //optimal amount of water
+    stepWalked: steps, //total steps has taken
+    timeSpentInToilet: timeIntoilet, // time spent in toilet
+    waterHasDrunk: waterDrunk, // amount of water has drunk
+    foodHasEaten: foodEaten, // amount of food has eaten
+    timesHasSlept: timeSlept, // amount of time has slept
+    PetInBoundary: isPetInBoundary, //true if pet is in the university else false
+    isCallMyPet: findMyPet, // is the findMyPet function on
+    Location: { // current location
       lon: currentLon,
       lat: currentLat,
     },
   }
+```
+```
+var properties = {
+    PetID: petIdentification, // Unqiue ID for identitifcation
+    optimalh2oProperty: optimalWater, //Optimal water drunk
+    boundary:currentBoundary, //Consist 2 points 
+    };
 ```
 
 In each literation, the action will either move randomly, eat, drink, go to toilet, sleep and rest.
@@ -77,25 +84,25 @@ The duration of the action is random. The body temperature and heart beat will i
 
 ## IoT Central Application
 The overview of the application. The application will check if the pet is stay in the boundary.
-![N|Solid](https://dm2305files.storage.live.com/y4m2rKa_lAEVPonue_xGOV51w257J6OSyODp-ZSWmauMkXygd1ZljnblzuzDcAEgdtseC7kF0YIUC7EIxSLnidpr2fD0ndieQTyI9wLM5xRA0N2QSiG788B_7Vibn60fkv4Ekb-aVgqXUTIyNeK0uTOSVkerNtZpZ6kXES003ssVWTjglEE1jPlPL-OrdhtM9Ye?width=2126&height=1216&cropmode=none)
+![N|Solid](screenshot/Architecture.png)
 
 Rules that define to monitor health. eg. if heartbeat drop below certain value.
-![N|Solid](https://i.ibb.co/25gNjgx/Screen-Shot-2021-09-15-at-8-51-56-pm.png)
+![N|Solid]((screenshot/Heartbeat_rule.png)
 
 Commands:
 Find my pet is command that help you to find the pet. If it is triggered, we expect the device to make some noise.
-![N|Solid](https://i.ibb.co/94Sjv2V/Screen-Shot-2021-09-15-at-8-58-06-pm.png)
+![N|Solid](screenshot/findMyPet_command.png)
 
 This command is for setting the optimal amount of water drunk for the pet. 
-![N|Solid](https://i.ibb.co/MCD36cG/Screen-Shot-2021-09-15-at-8-59-29-pm.png)
+![N|Solid](screenshot/setH2o_command.png)
 
 ## Event Hub
 The setting for event hub.
-![N|Solid](https://i.ibb.co/hHKcj8d/Screen-Shot-2021-09-15-at-9-11-10-pm.png)
+![N|Solid](screenshot/EventHub.png)
 
 ## Azure Stream Analytics
 The setting for Azure Stream Analytics.
-![N|Solid](https://i.ibb.co/1X2mfyG/Screen-Shot-2021-09-15-at-9-13-21-pm.png)
+![N|Solid](screenshot/Stream_Analytics.png)
 
 ## Power BI Dashboard
-![N|Solid](https://dm2305files.storage.live.com/y4mbTxVbeM-PN027Q06m7N-EDLkXTE9eaaRSoMY5U5ajw7WNXVPdGEc_QnyND8NWrRwzaF3-YfQT-RXqZ78fVw-wIS9DcIxftbIqdrlSkdmC8l81BqOO_rv71ksI5gHgPr4LuVjeh9dEc31Iu678Ke0wRSLT6r-Ws3tnrAeP9xtC9o_ut7Nv4GdiFU3NgC50LJp?width=2860&height=1564&cropmode=none)
+![N|Solid](screenshot/PowerBI.gif)
