@@ -5,7 +5,7 @@
 
 This is Donut. He lives in University of Adelaide. Despite his cuteness he always sneaks around in the campus. University of Adelaide is a big university. Sometime his owner has trouble of finding him.
 
-His owner has reached us to ask for a solution to deal with this. After going through the Azure Student Acceleration Bootcamp. Here we have a solution for that.
+His owner has reached us to ask for a solution to deal with this. After going through the Azure Student Acceleration Bootcamp. Here we propose a solution for that.
 
 Iot Central application + Event Hut + Power BI = Pet Health Monitor
 
