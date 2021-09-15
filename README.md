@@ -47,22 +47,29 @@ To better test our prototypes, we have create a script to stimulate pet behaviou
 The script send the following telemetry data for every 5 seconds:
 ```
 {
-    Action: state,
-    BodyTemperature: parseInt(temp),
-    HeartBeat: heartbeat,
-    optimalh2o: optimalWater,
-    stepWalked: steps,
-    timeSpentInToilet: timeIntoilet,
-    waterHasDrunk: waterDrunk,
-    foodHasEaten: foodEaten,
-    timesHasSlept: timeSlept,
-    PetInBoundary: isPetInBoundary,
-    isCallMyPet: findMyPet,
-    Location: {
+    Action: state, //Curent action
+    BodyTemperature: parseInt(temp), // Body Temperature
+    HeartBeat: heartbeat, //Heat Beat
+    optimalh2o: optimalWater, //optimal amount of water
+    stepWalked: steps, //total steps has taken
+    timeSpentInToilet: timeIntoilet, // time spent in toilet
+    waterHasDrunk: waterDrunk, // amount of water has drunk
+    foodHasEaten: foodEaten, // amount of food has eaten
+    timesHasSlept: timeSlept, // amount of time has slept
+    PetInBoundary: isPetInBoundary, //true if pet is in the university else false
+    isCallMyPet: findMyPet, // is the findMyPet function on
+    Location: { // current location
       lon: currentLon,
       lat: currentLat,
     },
   }
+```
+```
+var properties = {
+    PetID: petIdentification, // Unqiue ID for identitifcation
+    optimalh2oProperty: optimalWater, //Optimal water drunk
+    boundary:currentBoundary, //Consist 2 points 
+    };
 ```
 
 In each literation, the action will either move randomly, eat, drink, go to toilet, sleep and rest.
@@ -95,7 +102,7 @@ The setting for event hub.
 
 ## Azure Stream Analytics
 The setting for Azure Stream Analytics.
-![N|Solid](Stream_Analytics.png)
+![N|Solid](screenshot/Stream_Analytics.png)
 
 ## Power BI Dashboard
 ![N|Solid](screenshot/PowerBI.gif)
