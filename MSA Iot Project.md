@@ -1,10 +1,7 @@
 # MSA Iot Project
 ## _Pet Health Monitor_
 
-[![N|Solid](https://cldup.com/dTxpPi9lDf.thumb.png)](https://nodesource.com/products/nsolid)
-
-![N|Solid](https://i.ibb.co/9mx9t8r/662fdf7b-88f3-4891-aee1-2bb525a40fb4.jpg|height="50%"){:height="50%" width="50%"}
-<img src="https://github.com/favicon.ico" width="48">
+<img src="https://i.ibb.co/9mx9t8r/662fdf7b-88f3-4891-aee1-2bb525a40fb4.jpg|height="50%"" width="48">
 
 This is Donut. He lives in University of Adelaide. Despite his cuteness he always sneak around in the campus. University of Adelaide is a big university. Sometime his owner has trouble finding him.
 
